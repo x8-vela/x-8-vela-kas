@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kas Kelas</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:Arial,sans-serif;background:#f4f6f8;color:#333}
+        header{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:white;text-align:center;padding:35px 20px}
+        header h1{font-size:32px;margin-bottom:8px}
+        main{width:90%;max-width:1100px;margin:30px auto}
+        .summary{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:30px}
+        .card,.table-section,.schedule,.payment{background:white;border-radius:15px;box-shadow:0 5px 15px rgba(0,0,0,.08)}
+        .card{padding:25px;text-align:center}
+        .card h3{color:#666;margin-bottom:10px}.card p{color:#4f46e5;font-size:25px;font-weight:bold}
+        .table-section,.schedule,.payment{padding:25px;margin-bottom:30px}
+        h2{margin-bottom:20px}
+        table{width:100%;border-collapse:collapse}
+        th{background:#4f46e5;color:white;padding:14px}
+        td{padding:13px;text-align:center;border-bottom:1px solid #ddd}
+        tr:hover{background:#f5f5ff}
+        .lunas,.belum{padding:6px 12px;border-radius:20px;font-size:13px;font-weight:bold}
+        .lunas{background:#dcfce7;color:#15803d}.belum{background:#fee2e2;color:#dc2626}
+        .payment-info{color:#666;margin-bottom:25px}
+        .payment-container{display:grid;grid-template-columns:repeat(2,1fr);gap:25px}
+        .payment-card{border:1px solid #e5e7eb;border-radius:15px;padding:25px;text-align:center}
+        .payment-card h3{color:#4f46e5;margin-bottom:20px}
+        .qris-placeholder{width:180px;height:180px;border:3px dashed #4f46e5;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#4f46e5;font-size:25px;font-weight:bold;margin:0 auto 15px}
+        .rekening{background:#f5f5ff;padding:18px;border-radius:10px;text-align:left;margin-bottom:15px}
+        .rekening p{margin:8px 0}
+        .payment-button{border:none;background:#4f46e5;color:white;padding:12px 20px;border-radius:8px;margin-top:15px;cursor:pointer;font-weight:bold}
+        .payment-button:hover{background:#3730a3}
+        .confirmation{margin-top:25px;padding:15px;background:#ecfdf5;color:#15803d;border-radius:10px;text-align:center}
+        footer{text-align:center;padding:25px;color:#777}
+        @media(max-width:700px){.summary,.payment-container{grid-template-columns:1fr}.table-section,.schedule{overflow-x:auto}table{min-width:700px}}
+
+        .login-overlay{position:fixed;inset:0;background:rgba(15,23,42,.65);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
+        .login-box{background:white;width:100%;max-width:420px;border-radius:18px;padding:30px;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+        .login-box h2{text-align:center;color:#4f46e5;margin-bottom:8px}
+        .login-box .login-sub{text-align:center;color:#666;margin-bottom:22px}
+        .login-box label{display:block;font-weight:bold;margin:12px 0 6px}
+        .login-box input,.login-box select{width:100%;padding:12px;border:1px solid #d1d5db;border-radius:8px;font-size:15px}
+        .login-actions{display:flex;gap:10px;margin-top:20px}
+        .login-actions button{flex:1;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:bold}
+        .btn-primary{background:#4f46e5;color:white}.btn-secondary{background:#e5e7eb;color:#374151}
+        .login-error{display:none;background:#fee2e2;color:#b91c1c;padding:10px;border-radius:8px;margin-top:12px;text-align:center}
+        .top-actions{position:absolute;right:20px;top:20px;display:flex;gap:8px}
+        .role-button{border:1px solid rgba(255,255,255,.7);background:rgba(255,255,255,.15);color:white;padding:9px 14px;border-radius:8px;cursor:pointer}
+        .admin-panel{display:none;background:#eef2ff;border:1px solid #c7d2fe;border-radius:12px;padding:16px;margin-bottom:20px}
+        .admin-panel strong{color:#3730a3}
+        .logout-btn{float:right;border:none;background:#dc2626;color:white;padding:8px 12px;border-radius:7px;cursor:pointer}
+        .total-due{font-weight:bold;color:#dc2626}
+        .editable{width:110px;padding:7px;border:1px solid #c7d2fe;border-radius:6px;text-align:center}
+        .saman-note{font-size:12px;color:#666;margin-top:8px}
+        .deadline-section{background:white;border-radius:15px;box-shadow:0 5px 15px rgba(0,0,0,.08);padding:25px;margin-bottom:30px}
+        .deadline-header{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:20px}
+        .deadline-setting{display:flex;align-items:center;gap:10px}
+        .deadline-setting label{font-weight:bold;color:#4f46e5}
+        .deadline-setting input{padding:10px;border:1px solid #c7d2fe;border-radius:8px}
+        .deadline-countdown{text-align:center;font-size:32px;font-weight:bold;color:#4f46e5;background:#f5f5ff;border-radius:12px;padding:20px}
+        .deadline-countdown.warning{color:#d97706;background:#fffbeb}
+        .deadline-countdown.overdue{color:#dc2626;background:#fef2f2}
+        .deadline-date-text{text-align:center;color:#666;margin-top:10px}
+        @media(max-width:700px){.top-actions{position:static;padding-top:15px;justify-content:center}.deadline-header{flex-direction:column;align-items:stretch}.deadline-setting{flex-direction:column;align-items:stretch}.deadline-countdown{font-size:25px}}
+    </style>
+</head>
+<body>
+<header>
+    <h1>💰 Kas Kelas</h1>
+    <p>Daftar pembayaran dan jadwal kas kelas</p>
+    <div class="top-actions">
+        <button class="role-button" onclick="bukaLogin()">🔐 Login Bendahara / Wali Kelas</button>
+    </div>
+</header>
+
+<main>
+    <section class="summary">
+        <div class="card"><h3>Total Siswa</h3><p id="totalSiswa">35</p></div>
+        <div class="card"><h3>Total Kas Masuk</h3><p id="totalKasMasuk">Rp0</p></div>
+        <div class="card"><h3>Total Tanggungan</h3><p id="totalTanggungan">Rp30.000</p></div>
+    </section>
+
+    <section class="deadline-section">
+        <div class="deadline-header">
+            <div>
+                <h2>⏳ Tenggat Waktu Pembayaran</h2>
+                <p class="saman-note">Hitung mundur otomatis berdasarkan tanggal hari ini.</p>
+            </div>
+            <div class="deadline-setting">
+                <label for="deadlineDate">Tanggal Tenggat</label>
+                <input id="deadlineDate" type="date" disabled onchange="updateDeadline()">
+            </div>
+        </div>
+        <div class="deadline-countdown" id="deadlineCountdown">Memuat...</div>
+        <div class="deadline-date-text" id="deadlineDateText"></div>
+    </section>
+
+    <div class="admin-panel" id="adminPanel">
+        <button class="logout-btn" onclick="logout()">Keluar</button>
+        <strong id="loginRole">Mode Pengelola</strong>
+        <p style="margin-top:8px">Anda dapat mengubah nominal kas, Iuran Saman, Total Kas Dibayar, tanggal jadwal pembayaran mingguan, dan tanggal tenggat pembayaran. Perubahan tersimpan di Firebase dan dapat tersinkron ke perangkat lain secara realtime.</p>
+    </div>
+
+    <section class="table-section">
+        <h2>📋 Daftar Kas Kelas</h2>
+        <p class="saman-note">Total yang harus dibayar dihitung dari <strong>tunggakan kas + tunggakan Iuran Saman</strong>.</p>
+        <table>
+            <thead><tr><th>No</th><th>Nama</th><th>Tunggakan Kas</th><th>Iuran Saman</th><th>Total Harus Dibayar</th><th>Total Kas Dibayar</th><th>Status</th></tr></thead>
+            <tbody id="kasBody">
+                <tr data-kas="0" data-total-kas="0"><td>1</td><td>Achmad AAHBF</td><td><input class="editable tunggakan-kas" type="number" min="0" value="0" disabled onchange="updateData()"></td><td><input class="editable saman" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="total-due">Rp0</td><td><input class="editable total-kas-dibayar" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="status"><span class="lunas">Lunas</span></td></tr>
+                <tr data-kas="0" data-total-kas="0"><td>2</td><td>Adhelina Prima J</td><td><input class="editable tunggakan-kas" type="number" min="0" value="0" disabled onchange="updateData()"></td><td><input class="editable saman" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="total-due">Rp0</td><td><input class="editable total-kas-dibayar" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="status"><span class="lunas">Lunas</span></td></tr>
+                <tr data-kas="0" data-total-kas="0"><td>3</td><td>Almira Bilgis D.N</td><td><input class="editable tunggakan-kas" type="number" min="0" value="0" disabled onchange="updateData()"></td><td><input class="editable saman" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="total-due">Rp0</td><td><input class="editable total-kas-dibayar" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="status"><span class="lunas">Lunas</span></td></tr>
+                <tr data-kas="0" data-total-kas="0"><td>4</td><td>Annez TA</td><td><input class="editable tunggakan-kas" type="number" min="0" value="0" disabled onchange="updateData()"></td><td><input class="editable saman" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="total-due">Rp0</td><td><input class="editable total-kas-dibayar" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="status"><span class="lunas">Lunas</span></td></tr>
+                <tr data-kas="0" data-total-kas="0"><td>5</td><td>Ardelia Dinda M.</td><td><input class="editable tunggakan-kas" type="number" min="0" value="0" disabled onchange="updateData()"></td><td><input class="editable saman" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="total-due">Rp0</td><td><input class="editable total-kas-dibayar" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="status"><span class="lunas">Lunas</span></td></tr>
+                <tr data-kas="0" data-total-kas="0"><td>6</td><td>Atala i. R. B</td><td><input class="editable tunggakan-kas" type="number" min="0" value="0" disabled onchange="updateData()"></td><td><input class="editable saman" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="total-due">Rp0</td><td><input class="editable total-kas-dibayar" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="status"><span class="lunas">Lunas</span></td></tr>
+                <tr data-kas="0" data-total-kas="0"><td>7</td><td>Aura Jihan F.</td><td><input class="editable tunggakan-kas" type="number" min="0" value="0" disabled onchange="updateData()"></td><td><input class="editable saman" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="total-due">Rp0</td><td><input class="editable total-kas-dibayar" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="status"><span class="lunas">Lunas</span></td></tr>
+                <tr data-kas="0" data-total-kas="0"><td>8</td><td>Ayudya Nur S</td><td><input class="editable tunggakan-kas" type="number" min="0" value="0" disabled onchange="updateData()"></td><td><input class="editable saman" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="total-due">Rp0</td><td><input class="editable total-kas-dibayar" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="status"><span class="lunas">Lunas</span></td></tr>
+                <tr data-kas="0" data-total-kas="0"><td>9</td><td>Bimo Sandy N.</td><td><input class="editable tunggakan-kas" type="number" min="0" value="0" disabled onchange="updateData()"></td><td><input class="editable saman" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="total-due">Rp0</td><td><input class="editable total-kas-dibayar" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="status"><span class="lunas">Lunas</span></td></tr>
+                <tr data-kas="0" data-total-kas="0"><td>10</td><td>Fahruq Arrofi k</td><td><input class="editable tunggakan-kas" type="number" min="0" value="0" disabled onchange="updateData()"></td><td><input class="editable saman" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="total-due">Rp0</td><td><input class="editable total-kas-dibayar" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="status"><span class="lunas">Lunas</span></td></tr>
+                <tr data-kas="0" data-total-kas="0"><td>11</td><td>Fara i. M</td><td><input class="editable tunggakan-kas" type="number" min="0" value="0" disabled onchange="updateData()"></td><td><input class="editable saman" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="total-due">Rp0</td><td><input class="editable total-kas-dibayar" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="status"><span class="lunas">Lunas</span></td></tr>
+                <tr data-kas="0" data-total-kas="0"><td>12</td><td>Farley Ataullah R.P</td><td><input class="editable tunggakan-kas" type="number" min="0" value="0" disabled onchange="updateData()"></td><td><input class="editable saman" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="total-due">Rp0</td><td><input class="editable total-kas-dibayar" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="status"><span class="lunas">Lunas</span></td></tr>
+                <tr data-kas="0" data-total-kas="0"><td>13</td><td>Febby Rifantı S.</td><td><input class="editable tunggakan-kas" type="number" min="0" value="0" disabled onchange="updateData()"></td><td><input class="editable saman" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="total-due">Rp0</td><td><input class="editable total-kas-dibayar" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="status"><span class="lunas">Lunas</span></td></tr>
+                <tr data-kas="0" data-total-kas="0"><td>14</td><td>Hafid Maulana A-A</td><td><input class="editable tunggakan-kas" type="number" min="0" value="0" disabled onchange="updateData()"></td><td><input class="editable saman" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="total-due">Rp0</td><td><input class="editable total-kas-dibayar" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="status"><span class="lunas">Lunas</span></td></tr>
+                <tr data-kas="0" data-total-kas="0"><td>15</td><td>Hasnaa Nuraini M.</td><td><input class="editable tunggakan-kas" type="number" min="0" value="0" disabled onchange="updateData()"></td><td><input class="editable saman" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="total-due">Rp0</td><td><input class="editable total-kas-dibayar" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="status"><span class="lunas">Lunas</span></td></tr>
+                <tr data-kas="0" data-total-kas="0"><td>16</td><td>Keysha Puteri A.</td><td><input class="editable tunggakan-kas" type="number" min="0" value="0" disabled onchange="updateData()"></td><td><input class="editable saman" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="total-due">Rp0</td><td><input class="editable total-kas-dibayar" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="status"><span class="lunas">Lunas</span></td></tr>
+                <tr data-kas="0" data-total-kas="0"><td>17</td><td>khoiryatun Nisa N.H</td><td><input class="editable tunggakan-kas" type="number" min="0" value="0" disabled onchange="updateData()"></td><td><input class="editable saman" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="total-due">Rp0</td><td><input class="editable total-kas-dibayar" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="status"><span class="lunas">Lunas</span></td></tr>
+                <tr data-kas="0" data-total-kas="0"><td>18</td><td>Khoirul Dani</td><td><input class="editable tunggakan-kas" type="number" min="0" value="0" disabled onchange="updateData()"></td><td><input class="editable saman" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="total-due">Rp0</td><td><input class="editable total-kas-dibayar" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="status"><span class="lunas">Lunas</span></td></tr>
+                <tr data-kas="0" data-total-kas="0"><td>19</td><td>Levina Nurri-A-K</td><td><input class="editable tunggakan-kas" type="number" min="0" value="0" disabled onchange="updateData()"></td><td><input class="editable saman" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="total-due">Rp0</td><td><input class="editable total-kas-dibayar" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="status"><span class="lunas">Lunas</span></td></tr>
+                <tr data-kas="0" data-total-kas="0"><td>20</td><td>Mariza kristina</td><td><input class="editable tunggakan-kas" type="number" min="0" value="0" disabled onchange="updateData()"></td><td><input class="editable saman" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="total-due">Rp0</td><td><input class="editable total-kas-dibayar" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="status"><span class="lunas">Lunas</span></td></tr>
+                <tr data-kas="0" data-total-kas="0"><td>21</td><td>Mauren Syafiya - H. A</td><td><input class="editable tunggakan-kas" type="number" min="0" value="0" disabled onchange="updateData()"></td><td><input class="editable saman" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="total-due">Rp0</td><td><input class="editable total-kas-dibayar" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="status"><span class="lunas">Lunas</span></td></tr>
+                <tr data-kas="0" data-total-kas="0"><td>22</td><td>M. Shabri A.W</td><td><input class="editable tunggakan-kas" type="number" min="0" value="0" disabled onchange="updateData()"></td><td><input class="editable saman" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="total-due">Rp0</td><td><input class="editable total-kas-dibayar" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="status"><span class="lunas">Lunas</span></td></tr>
+                <tr data-kas="0" data-total-kas="0"><td>23</td><td>M. SidiqZ</td><td><input class="editable tunggakan-kas" type="number" min="0" value="0" disabled onchange="updateData()"></td><td><input class="editable saman" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="total-due">Rp0</td><td><input class="editable total-kas-dibayar" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="status"><span class="lunas">Lunas</span></td></tr>
+                <tr data-kas="0" data-total-kas="0"><td>24</td><td>Najwa khoirunnisa</td><td><input class="editable tunggakan-kas" type="number" min="0" value="0" disabled onchange="updateData()"></td><td><input class="editable saman" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="total-due">Rp0</td><td><input class="editable total-kas-dibayar" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="status"><span class="lunas">Lunas</span></td></tr>
+                <tr data-kas="0" data-total-kas="0"><td>25</td><td>Niken Dwi Aulia</td><td><input class="editable tunggakan-kas" type="number" min="0" value="0" disabled onchange="updateData()"></td><td><input class="editable saman" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="total-due">Rp0</td><td><input class="editable total-kas-dibayar" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="status"><span class="lunas">Lunas</span></td></tr>
+                <tr data-kas="0" data-total-kas="0"><td>26</td><td>Orlinda Putri Aulia</td><td><input class="editable tunggakan-kas" type="number" min="0" value="0" disabled onchange="updateData()"></td><td><input class="editable saman" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="total-due">Rp0</td><td><input class="editable total-kas-dibayar" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="status"><span class="lunas">Lunas</span></td></tr>
+                <tr data-kas="0" data-total-kas="0"><td>27</td><td>Rapi Eka Saputra</td><td><input class="editable tunggakan-kas" type="number" min="0" value="0" disabled onchange="updateData()"></td><td><input class="editable saman" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="total-due">Rp0</td><td><input class="editable total-kas-dibayar" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="status"><span class="lunas">Lunas</span></td></tr>
+                <tr data-kas="0" data-total-kas="0"><td>28</td><td>Raihan Akbar R</td><td><input class="editable tunggakan-kas" type="number" min="0" value="0" disabled onchange="updateData()"></td><td><input class="editable saman" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="total-due">Rp0</td><td><input class="editable total-kas-dibayar" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="status"><span class="lunas">Lunas</span></td></tr>
+                <tr data-kas="0" data-total-kas="0"><td>29</td><td>Ryan Pramadita</td><td><input class="editable tunggakan-kas" type="number" min="0" value="0" disabled onchange="updateData()"></td><td><input class="editable saman" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="total-due">Rp0</td><td><input class="editable total-kas-dibayar" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="status"><span class="lunas">Lunas</span></td></tr>
+                <tr data-kas="0" data-total-kas="0"><td>30</td><td>Salsabila Zahraa S</td><td><input class="editable tunggakan-kas" type="number" min="0" value="0" disabled onchange="updateData()"></td><td><input class="editable saman" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="total-due">Rp0</td><td><input class="editable total-kas-dibayar" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="status"><span class="lunas">Lunas</span></td></tr>
+                <tr data-kas="0" data-total-kas="0"><td>31</td><td>Senja Ciara Fabiola</td><td><input class="editable tunggakan-kas" type="number" min="0" value="0" disabled onchange="updateData()"></td><td><input class="editable saman" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="total-due">Rp0</td><td><input class="editable total-kas-dibayar" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="status"><span class="lunas">Lunas</span></td></tr>
+                <tr data-kas="0" data-total-kas="0"><td>32</td><td>Shafa Nadiva</td><td><input class="editable tunggakan-kas" type="number" min="0" value="0" disabled onchange="updateData()"></td><td><input class="editable saman" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="total-due">Rp0</td><td><input class="editable total-kas-dibayar" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="status"><span class="lunas">Lunas</span></td></tr>
+                <tr data-kas="0" data-total-kas="0"><td>33</td><td>Tria Aprilia S</td><td><input class="editable tunggakan-kas" type="number" min="0" value="0" disabled onchange="updateData()"></td><td><input class="editable saman" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="total-due">Rp0</td><td><input class="editable total-kas-dibayar" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="status"><span class="lunas">Lunas</span></td></tr>
+                <tr data-kas="0" data-total-kas="0"><td>34</td><td>Zefanya Jessica E</td><td><input class="editable tunggakan-kas" type="number" min="0" value="0" disabled onchange="updateData()"></td><td><input class="editable saman" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="total-due">Rp0</td><td><input class="editable total-kas-dibayar" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="status"><span class="lunas">Lunas</span></td></tr>
+                <tr data-kas="0" data-total-kas="0"><td>35</td><td>Caryssa</td><td><input class="editable tunggakan-kas" type="number" min="0" value="0" disabled onchange="updateData()"></td><td><input class="editable saman" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="total-due">Rp0</td><td><input class="editable total-kas-dibayar" type="number" min="0" value="0" disabled onchange="updateData()"></td><td class="status"><span class="lunas">Lunas</span></td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section class="schedule">
+        <h2>📅 Jadwal Pembayaran Kas Mingguan</h2>
+        <p class="saman-note">Pembayaran kas dilakukan <strong>1 kali setiap minggu</strong>. Tanggal dapat diubah oleh Bendahara setelah login.</p>
+        <table>
+            <thead><tr><th>Minggu</th><th>Tanggal Pembayaran</th><th>Petugas</th><th>Keterangan</th></tr></thead>
+            <tbody id="jadwalKasBody">
+                <tr data-week="1"><td>Minggu ke-1</td><td><input class="editable tanggal-kas" type="date" value="2026-10-05" disabled onchange="updateJadwal()"></td><td>Bendahara Kelas</td><td>Pengumpulan kas mingguan</td></tr>
+                <tr data-week="2"><td>Minggu ke-2</td><td><input class="editable tanggal-kas" type="date" value="2026-10-12" disabled onchange="updateJadwal()"></td><td>Bendahara Kelas</td><td>Pengumpulan kas mingguan</td></tr>
+                <tr data-week="3"><td>Minggu ke-3</td><td><input class="editable tanggal-kas" type="date" value="2026-10-19" disabled onchange="updateJadwal()"></td><td>Bendahara Kelas</td><td>Pengumpulan kas mingguan</td></tr>
+                <tr data-week="4"><td>Minggu ke-4</td><td><input class="editable tanggal-kas" type="date" value="2026-10-26" disabled onchange="updateJadwal()"></td><td>Bendahara Kelas</td><td>Pengumpulan kas mingguan</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section class="payment">
+        <h2>💳 Pembayaran Online</h2>
+        <p class="payment-info">Jika ingin membayar kas secara online, silakan pilih salah satu metode pembayaran berikut.</p>
+        <div class="payment-container">
+            <div class="payment-card">
+                <h3>📱 Pembayaran QRIS</h3>
+                <div class="qris-placeholder">QRIS</div>
+                <p>Scan QRIS menggunakan aplikasi pembayaran yang mendukung QRIS.</p>
+                <button class="payment-button">Bayar melalui QRIS</button>
+            </div>
+
+            <div class="payment-card">
+                <h3>💙 BCA</h3>
+                <div class="rekening">
+                    <p><strong>Metode:</strong> BCA</p>
+                    <p><strong>Nomor:</strong> 7915629121</p>
+                    <p><strong>Nama:</strong> Marizza</p>
+                </div>
+                <p>Silakan transfer sesuai jumlah kas yang harus dibayar.</p>
+                <button class="payment-button" onclick="salinBCA()">Salin Nomor BCA</button>
+            </div>
+        </div>
+        <div class="confirmation"><p>✅ Setelah melakukan pembayaran, jangan lupa konfirmasi kepada bendahara kelas.</p></div>
+    </section>
+</main>
+
+<footer><p>© 2026 Kas Kelas | Bendahara Kelas</p></footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig = {
+    apiKey: "AIzaSyBJbuc_pS1YeToU6j-d8N3ksH8JV8xfsLI",
+    authDomain: "kas-kelas-dfa05.firebaseapp.com",
+    databaseURL: "https://kas-kelas-dfa05-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "kas-kelas-dfa05",
+    storageBucket: "kas-kelas-dfa05.firebasestorage.app",
+    messagingSenderId: "952280345112",
+    appId: "1:952280345112:web:1538b757bdde2806edb16d",
+    measurementId: "G-7Z9XYNJH36"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const kasRef = db.ref("kasKelas/data");
+const jadwalRef = db.ref("kasKelas/jadwalMingguan");
+const deadlineRef = db.ref("kasKelas/tenggatPembayaran");
+
+const LOGIN_USERNAME = "x-8 vela";
+const LOGIN_PASSWORD = "12345678";
+let loggedIn = false;
+let applyingRemoteData = false;
+
+function rupiah(n){
+    return new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(Number(n)||0);
+}
+
+function bukaLogin(){
+    document.getElementById("loginOverlay").style.display="flex";
+    document.getElementById("username").focus();
+}
+function tutupLogin(){
+    document.getElementById("loginOverlay").style.display="none";
+    document.getElementById("loginError").style.display="none";
+}
+function login(){
+    const u=document.getElementById("username").value.trim();
+    const p=document.getElementById("password").value;
+    if(u===LOGIN_USERNAME && p===LOGIN_PASSWORD){
+        loggedIn=true;
+        document.querySelectorAll(".saman, .tunggakan-kas, .total-kas-dibayar, .tanggal-kas, #deadlineDate").forEach(el=>el.disabled=false);
+        document.getElementById("adminPanel").style.display="block";
+        document.getElementById("loginRole").textContent =
+            "Mode Pengelola: " + (document.getElementById("role").value==="bendahara" ? "Bendahara" : "Wali Kelas");
+        tutupLogin();
+        alert("Login berhasil.");
+    }else{
+        document.getElementById("loginError").style.display="block";
+    }
+}
+function logout(){
+    loggedIn=false;
+    document.querySelectorAll(".saman, .tunggakan-kas, .total-kas-dibayar, .tanggal-kas, #deadlineDate").forEach(el=>el.disabled=true);
+    document.getElementById("adminPanel").style.display="none";
+    alert("Anda telah keluar.");
+}
+
+function getKasDataFromPage(){
+    const data=[];
+    document.querySelectorAll("#kasBody tr").forEach(row=>{
+        data.push({
+            kas:Number(row.querySelector(".tunggakan-kas").value||0),
+            saman:Number(row.querySelector(".saman").value||0),
+            paid:Number(row.querySelector(".total-kas-dibayar").value||0)
+        });
+    });
+    return data;
+}
+
+function renderKasData(data){
+    applyingRemoteData=true;
+    document.querySelectorAll("#kasBody tr").forEach((row,i)=>{
+        const item=data && data[i] ? data[i] : {};
+        row.querySelector(".tunggakan-kas").value=Number(item.kas||0);
+        row.querySelector(".saman").value=Number(item.saman||0);
+        row.querySelector(".total-kas-dibayar").value=Number(item.paid||0);
+    });
+    applyingRemoteData=false;
+    hitungKas();
+}
+
+function hitungKas(){
+    let totalTanggungan=0;
+    let totalKasMasuk=0;
+    document.querySelectorAll("#kasBody tr").forEach(row=>{
+        const kas=Number(row.querySelector(".tunggakan-kas").value||0);
+        const saman=Number(row.querySelector(".saman").value||0);
+        const paid=Number(row.querySelector(".total-kas-dibayar").value||0);
+        const total=kas+saman;
+        const remaining=Math.max(0,total-paid);
+        totalTanggungan += remaining;
+        totalKasMasuk += paid;
+        row.dataset.kas=kas;
+        row.dataset.totalKas=paid;
+        row.querySelector(".total-due").textContent=rupiah(total);
+        row.querySelector(".status").innerHTML=remaining>0
+            ? '<span class="belum">Belum Lunas</span>'
+            : '<span class="lunas">Lunas</span>';
+    });
+    document.getElementById("totalTanggungan").textContent=rupiah(totalTanggungan);
+    document.getElementById("totalKasMasuk").textContent=rupiah(totalKasMasuk);
+}
+
+function updateData(){
+    hitungKas();
+    if(!loggedIn || applyingRemoteData) return;
+    kasRef.set(getKasDataFromPage()).catch(err=>{
+        console.error(err);
+        alert("Data belum tersimpan ke Firebase. Periksa Firebase Realtime Database Rules.");
+    });
+}
+
+function updateJadwal(){
+    if(!loggedIn) return;
+    const data={};
+    document.querySelectorAll("#jadwalKasBody tr").forEach((row,i)=>{
+        const input=row.querySelector(".tanggal-kas");
+        data[i]={week:row.dataset.week || String(i+1), date:input.value};
+    });
+    jadwalRef.set(data).catch(err=>{
+        console.error(err);
+        alert("Jadwal belum tersimpan ke Firebase. Periksa Firebase Realtime Database Rules.");
+    });
+}
+
+function renderJadwal(data){
+    if(!data) return;
+    applyingRemoteData=true;
+    document.querySelectorAll("#jadwalKasBody .tanggal-kas").forEach((input,i)=>{
+        if(data[i] && data[i].date) input.value=data[i].date;
+        else if(typeof data[i]==="string") input.value=data[i];
+    });
+    applyingRemoteData=false;
+}
+
+function formatTanggalIndonesia(dateString){
+    if(!dateString) return "";
+    const d = new Date(dateString + "T00:00:00");
+    return d.toLocaleDateString("id-ID", {weekday:"long",year:"numeric",month:"long",day:"numeric"});
+}
+
+function updateDeadline(){
+    const input=document.getElementById("deadlineDate");
+    if(!input || !loggedIn) return;
+    const value=input.value;
+    deadlineRef.set(value || null).catch(err=>{
+        console.error(err);
+        alert("Tanggal tenggat belum tersimpan ke Firebase. Periksa Firebase Realtime Database Rules.");
+    });
+    renderCountdown();
+}
+
+function renderCountdown(){
+    const input=document.getElementById("deadlineDate");
+    const countdown=document.getElementById("deadlineCountdown");
+    const dateText=document.getElementById("deadlineDateText");
+    if(!input || !countdown || !dateText) return;
+    const deadlineValue=input.value;
+    if(!deadlineValue){
+        countdown.className="deadline-countdown";
+        countdown.textContent="Tenggat belum ditentukan";
+        dateText.textContent="Silakan tentukan tanggal tenggat melalui akun pengelola.";
+        return;
+    }
+    const now=new Date();
+    const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+    const deadline=new Date(deadlineValue+"T00:00:00");
+    const diffDays=Math.ceil((deadline-today)/86400000);
+    countdown.className="deadline-countdown";
+    if(diffDays>1){
+        countdown.textContent=diffDays+" hari lagi";
+        if(diffDays<=3) countdown.classList.add("warning");
+    }else if(diffDays===1){
+        countdown.textContent="Besok adalah tenggat";
+        countdown.classList.add("warning");
+    }else if(diffDays===0){
+        countdown.textContent="Hari ini adalah tenggat!";
+        countdown.classList.add("warning");
+    }else{
+        const overdue=Math.abs(diffDays);
+        countdown.textContent="Tenggat terlewat "+overdue+" hari";
+        countdown.classList.add("overdue");
+    }
+    dateText.textContent="Tenggat pembayaran: "+formatTanggalIndonesia(deadlineValue);
+}
+
+function salinBCA(){
+    navigator.clipboard.writeText("7915629121");
+    alert("Nomor BCA berhasil disalin!");
+}
+
+function setConnectionStatus(ok,text){
+    const panel=document.getElementById("adminPanel");
+    if(!panel) return;
+    let el=document.getElementById("firebaseStatus");
+    if(!el){
+        el=document.createElement("p");
+        el.id="firebaseStatus";
+        el.style.marginTop="8px";
+        panel.appendChild(el);
+    }
+    el.textContent="Firebase: "+text;
+    el.style.color=ok ? "#15803d" : "#b91c1c";
+}
+
+function initFirebaseRealtime(){
+    db.ref(".info/connected").on("value",snap=>{
+        if(snap.val()===true) setConnectionStatus(true,"Terhubung realtime");
+        else setConnectionStatus(false,"Tidak terhubung");
+    });
+
+    kasRef.on("value",snap=>{
+        const data=snap.val();
+        if(data===null){
+            const initial=getKasDataFromPage();
+            kasRef.set(initial).catch(err=>console.error("Gagal membuat data awal:",err));
+        }else{
+            const normalized=Array.isArray(data) ? data : Object.values(data);
+            renderKasData(normalized);
+        }
+    },err=>{
+        console.error(err);
+        setConnectionStatus(false,"Akses ditolak");
+    });
+
+    jadwalRef.on("value",snap=>{
+        const data=snap.val();
+        if(data===null){
+            const initial={};
+            document.querySelectorAll("#jadwalKasBody tr").forEach((row,i)=>{
+                initial[i]={week:row.dataset.week || String(i+1),date:row.querySelector(".tanggal-kas").value};
+            });
+            jadwalRef.set(initial).catch(err=>console.error("Gagal membuat jadwal awal:",err));
+        }else renderJadwal(data);
+    },err=>console.error("Gagal membaca jadwal:",err));
+
+    deadlineRef.on("value",snap=>{
+        const value=snap.val();
+        if(value){
+            applyingRemoteData=true;
+            document.getElementById("deadlineDate").value=value;
+            applyingRemoteData=false;
+        }else if(snap.exists()){
+            document.getElementById("deadlineDate").value="";
+        }else{
+            const input=document.getElementById("deadlineDate");
+            if(!input.value){
+                const d=new Date();
+                d.setDate(d.getDate()+7);
+                const initial=d.toISOString().slice(0,10);
+                input.value=initial;
+                deadlineRef.set(initial).catch(err=>console.error("Gagal membuat deadline awal:",err));
+            }
+        }
+        renderCountdown();
+    },err=>console.error("Gagal membaca deadline:",err));
+}
+
+document.addEventListener("DOMContentLoaded",()=>{
+    hitungKas();
+    renderCountdown();
+    initFirebaseRealtime();
+    setInterval(renderCountdown,60000);
+});
+</script>
+
+<div class="login-overlay" id="loginOverlay" style="display:none">
+    <div class="login-box">
+        <h2>🔐 Login Pengelola</h2>
+        <p class="login-sub">Pilih akun untuk mengelola data kas kelas</p>
+        <label for="role">Login sebagai</label>
+        <select id="role">
+            <option value="bendahara">Bendahara</option>
+            <option value="wali">Wali Kelas</option>
+        </select>
+        <label for="username">Username</label>
+        <input id="username" type="text" autocomplete="username" placeholder="Masukkan username">
+        <label for="password">Password</label>
+        <input id="password" type="password" autocomplete="current-password" placeholder="Masukkan password">
+        <div class="login-error" id="loginError">Username atau password salah.</div>
+        <div class="login-actions">
+            <button class="btn-secondary" onclick="tutupLogin()">Batal</button>
+            <button class="btn-primary" onclick="login()">Masuk</button>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
